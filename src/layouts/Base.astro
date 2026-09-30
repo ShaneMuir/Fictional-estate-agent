@@ -1,0 +1,19 @@
+---
+import { getMenuWithCacheHint, getSiteSettingsWithCacheHint } from 'emdash';
+import { EmDashHead, EmDashBodyStart, EmDashBodyEnd } from 'emdash/ui';
+import { createPublicPageContext } from 'emdash/page';
+import { globalContent, safeLink } from '../lib/cms';
+import '../styles/site.css';
+const { title, description, global: suppliedGlobal, content } = Astro.props;
+const [g, settings, menu, footer] = await Promise.all([suppliedGlobal || globalContent(), getSiteSettingsWithCacheHint(), getMenuWithCacheHint('primary'), getMenuWithCacheHint('footer')]);
+const siteTitle = settings.data.title || 'Northfield & Co.';
+const fullTitle = `${title} | ${siteTitle}`;
+const pageCtx = createPublicPageContext({Astro,kind:content?'content':'custom',pageType:'website',title:fullTitle,description:description || settings.data.tagline,siteName:siteTitle,content});
+---
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="robots" content="noindex,nofollow,noarchive"/><meta name="theme-color" content="#183d36"/><title>{fullTitle}</title><EmDashHead page={pageCtx}/></head><body>
+<EmDashBodyStart page={pageCtx}/><a class="skip" href="#main">{g.ui.skip}</a><div class="demo-notice">{g.demo_notice}</div>
+<header class="site-header"><div class="container header-inner"><a href="/" class="brand" aria-label={siteTitle}><span>{siteTitle}</span><small>{g.strapline}</small></a><button class="menu-toggle" aria-expanded="false" aria-controls="primary-nav">{g.ui.menu} <span aria-hidden="true">☰</span></button><nav id="primary-nav" aria-label={g.ui.menu}>{menu.data?.items.map((item: any)=><a href={safeLink(item.url)} aria-current={Astro.url.pathname===item.url?'page':undefined}>{item.label}</a>)}</nav><a class="button header-cta" href="/valuation">{g.valuation_label}<span aria-hidden="true">↗</span></a></div></header>
+<main id="main"><slot/></main>
+<footer class="site-footer"><div class="container footer-top"><div><a class="brand" href="/"><span>{siteTitle}</span><small>{g.strapline}</small></a><p>{g.footer_text}</p></div><nav aria-label={g.ui.contact}>{footer.data?.items.map((item: any)=><a href={safeLink(item.url)}>{item.label}</a>)}</nav></div><div class="container footer-bottom"><p>{g.ui.copyright}</p><p>{g.demo_notice}</p></div></footer><EmDashBodyEnd page={pageCtx}/>
+<script>const toggle=document.querySelector<HTMLButtonElement>('.menu-toggle');toggle?.addEventListener('click',()=>{const expanded=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!expanded));document.querySelector('#primary-nav')?.classList.toggle('is-open',!expanded);});</script>
+</body></html>

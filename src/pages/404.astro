@@ -1,0 +1,7 @@
+---
+import Base from '../layouts/Base.astro';
+import { entry,globalContent } from '../lib/cms';
+const [page,g]=await Promise.all([entry('pages','404'),globalContent()]);
+Astro.response.status=404;
+---
+<Base title={page.data.title} global={g}><section class="section container narrow not-found"><p class="eyebrow">404</p><h1>{page.data.title}</h1><p>{page.data.excerpt}</p><a class="button" href="/">{g.ui.home} ↗</a></section></Base>

@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import PropertyCard from './PropertyCard.astro';
+import { entries, entry, globalContent } from '../lib/cms';
+const { market } = Astro.props;
+const [all,page,g,areas]=await Promise.all([entries('properties'),entry('pages',market==='sale'?'sales':'lettings'),globalContent(),entries('areas')]);
+const q=Astro.url.searchParams;
+const finite=(key:string)=>{const s=q.get(key);const v=Number(s);return s&&Number.isFinite(v)&&v>=0?v:undefined;};
+const loc=(q.get('location')||'').trim().slice(0,100), min=finite('min'), max=finite('max'),beds=finite('beds'),type=q.get('type')||'',sort=['price_asc','price_desc'].includes(q.get('sort')||'')?q.get('sort')!:'newest';
+let results=all.filter(p=>p.data.market===market&&(!loc||`${p.data.location} ${p.data.postcode} ${p.data.address}`.toLowerCase().includes(loc.toLowerCase()))&&(min===undefined||p.data.price>=min)&&(max===undefined||p.data.price<=max)&&(!beds||p.data.bedrooms>=beds)&&(!type||p.data.property_type===type));
+results.sort((a,b)=>sort==='price_asc'?a.data.price-b.data.price:sort==='price_desc'?b.data.price-a.data.price:(Date.parse(b.createdAt)-Date.parse(a.createdAt)||b.data.reference.localeCompare(a.data.reference)));
+const pageCount=Math.max(1,Math.ceil(results.length/9)),current=Math.min(pageCount,Math.max(1,Math.floor(finite('page')||1))),visible=results.slice((current-1)*9,current*9);
+const pageUrl=(n:number)=>{const params=new URLSearchParams(q);params.set('page',String(n));return `${Astro.url.pathname}?${params}`;};
+const types=[...new Set(all.map(p=>p.data.property_type))];
+---
+<Base title={page.data.title} global={g}><section class="page-intro container"><p class="eyebrow">{market==='sale'?g.ui.sale:g.ui.let}</p><h1>{page.data.title}</h1><p>{page.data.excerpt}</p></section>
+<section class="container search-section"><form class="filters" method="get"><label>{g.ui.location}<input name="location" value={loc} list="locations" placeholder={g.ui.any_location}/><datalist id="locations">{areas.map(a=><option value={a.data.title}/>)}</datalist></label><label>{g.ui.min_price}<input name="min" type="number" min="0" step="1" value={min} placeholder={g.ui.any_price}/></label><label>{g.ui.max_price}<input name="max" type="number" min="0" step="1" value={max} placeholder={g.ui.any_price}/></label><label>{g.ui.bedrooms}<select name="beds"><option value="">{g.ui.any_bedrooms}</option>{[1,2,3,4,5].map(n=><option value={n} selected={beds===n}>{n}+</option>)}</select></label><label>{g.ui.property_type}<select name="type"><option value="">{g.ui.any_type}</option>{types.map(t=><option value={t} selected={type===t}>{t}</option>)}</select></label><label>{g.ui.sort}<select name="sort">{['newest','price_asc','price_desc'].map(s=><option value={s} selected={sort===s}>{g.ui[s]}</option>)}</select></label><button class="button" type="submit">{g.ui.search_button}</button><a href={Astro.url.pathname}>{g.ui.reset}</a></form>
+<div class="results-bar"><p><strong>{results.length}</strong> {g.ui.results}</p><span>{current} / {pageCount}</span></div><div class="property-grid">{visible.map(p=><PropertyCard property={p} ui={g.ui}/>)}</div>{!visible.length&&<p class="empty-state">{g.ui.no_results}</p>}<nav class="pagination" aria-label={g.ui.results}>{current>1&&<a href={pageUrl(current-1)}>{g.ui.previous}</a>}{Array.from({length:pageCount},(_,i)=><a href={pageUrl(i+1)} aria-current={i+1===current?'page':undefined}>{i+1}</a>)}{current<pageCount&&<a href={pageUrl(current+1)}>{g.ui.next}</a>}</nav></section></Base>

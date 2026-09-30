@@ -1,0 +1,8 @@
+---
+import Base from '../layouts/Base.astro';
+import Sections from '../components/Sections.astro';
+import { entry, globalContent } from '../lib/cms';
+const [page,g]=await Promise.all([entry('pages','home'),globalContent()]);
+if(!page) throw new Error('Seed the Northfield home page.');
+---
+<Base title={page.data.title} description={page.data.excerpt} global={g} content={{collection:'pages',id:page.data.id,slug:page.id}}><div {...page.edit.layout}><Sections blocks={page.data.layout} global={g}/></div></Base>

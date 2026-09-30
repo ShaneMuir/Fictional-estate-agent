@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+import Sections from '../components/Sections.astro';
+import EnquiryForm from '../components/EnquiryForm.astro';
+import { PortableText } from 'emdash/ui';
+import { entry, globalContent } from '../lib/cms';
+const slug=Astro.params.slug!;
+const [page,g]=await Promise.all([entry('pages',slug),globalContent()]);
+if(!page||['sales','lettings','areas','branches','advice'].includes(slug))return Astro.rewrite('/404');
+---
+<Base title={page.data.title} global={g} content={{collection:'pages',id:page.data.id,slug:page.id}}><div {...page.edit.layout}><Sections blocks={page.data.layout} global={g}/></div>{!page.data.layout?.length&&<section class="section container narrow"><h1 {...page.edit.title}>{page.data.title}</h1><PortableText value={page.data.content}/></section>}{['valuation','contact'].includes(slug)&&<section class="section container narrow"><EnquiryForm global={g} kind={slug}/></section>}</Base>

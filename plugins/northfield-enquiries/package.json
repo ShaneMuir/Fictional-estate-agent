@@ -1,0 +1,1 @@
+{"name":"@northfield/enquiries","version":"1.0.0","type":"module","exports":{".":"./index.mjs","./admin":"./admin.tsx"},"peerDependencies":{"emdash":"^1.0.1","react":"^19.2.4"}}

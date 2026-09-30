@@ -1,0 +1,18 @@
+---
+import { Image } from 'emdash/ui';
+import { money } from '../lib/cms';
+const { property: p, ui } = Astro.props;
+---
+<article class="property-card">
+  <a class="property-image" href={`/properties/${p.id}`} aria-label={`${ui.view_property}: ${p.data.title}`}>
+    <Image image={p.data.image} />
+    <span class="badge">{p.data.availability}</span>
+    <span class="image-arrow" aria-hidden="true">↗</span>
+  </a>
+  <div class="property-copy">
+    <p class="eyebrow">{p.data.location} <span>· {p.data.property_type}</span></p>
+    <h3 {...p.edit.title}><a href={`/properties/${p.id}`}>{p.data.title}</a></h3>
+    <p class="property-price">{money(p.data.price)} <small>{p.data.qualifier}</small></p>
+    <div class="property-specs"><span>{p.data.bedrooms} {ui.beds}</span><span>{p.data.bathrooms} {ui.baths}</span><span>{p.data.floor_area} {ui.area_unit}</span></div>
+  </div>
+</article>

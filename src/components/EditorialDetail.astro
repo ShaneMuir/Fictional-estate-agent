@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+import PropertyCard from './PropertyCard.astro';
+import { entry,entries,globalContent } from '../lib/cms';
+import { Image,PortableText } from 'emdash/ui';
+const { collection, slug }=Astro.props;
+const [item,g,properties]=await Promise.all([entry(collection,slug,collection==='articles'?{author:true}:undefined),globalContent(),collection==='areas'?entries('properties',{area:true}):[]]);
+if(!item)return Astro.rewrite('/404');
+const agents=collection==='branches'?(await entries('agents',{branch:true})).filter(a=>a.references?.branch?.entries.some((b:any)=>b.data.id===item.data.id)):[];
+---
+<Base title={item.data.title} description={item.data.excerpt} global={g} content={{collection,id:item.data.id,slug:item.id}}><section class="editorial-hero container"><div><p class="eyebrow">{item.data.eyebrow}</p><h1 {...item.edit.title}>{item.data.title}</h1><p class="lead">{item.data.excerpt}</p>{item.data.read_time&&<p>{item.data.read_time}</p>}{item.references?.author?.entries[0]&&<p>{item.references.author.entries[0].data.title}</p>}</div><Image image={item.data.image} priority/></section><section class="section container narrow prose" {...item.edit.content}><PortableText value={item.data.content}/>{item.data.highlights&&<p class="highlight">{item.data.highlights}</p>}{collection==='branches'&&<div class="branch-contact"><h2>{g.ui.contact}</h2><p>{item.data.address}</p><p>{item.data.phone}<br/>{item.data.email}</p><h3>{g.ui.hours}</h3><p class="preline">{item.data.hours}</p><a class="button" href="/contact">{g.ui.contact} ↗</a></div>}</section>{collection==='areas'&&<section class="section container"><h2>{g.ui.search}</h2><div class="property-grid">{properties.filter(p=>p.references?.area?.entries.some((a:any)=>a.data.id===item.data.id)).slice(0,6).map(p=><PropertyCard property={p} ui={g.ui}/>)}</div><a class="text-link" href={`/sales?location=${encodeURIComponent(item.data.title)}`}>{g.ui.search_button} ↗</a></section>}{collection==='branches'&&<section class="section container"><h2>{g.ui.team}</h2><div class="team-grid">{agents.map(a=><article><div class="avatar">{a.data.initials}</div><h3>{a.data.title}</h3><p>{a.data.role}</p></article>)}</div></section>}</Base>
